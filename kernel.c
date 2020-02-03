@@ -37,7 +37,7 @@ void main()
     interrupt(33,0,"Hello world from Joseph, Cameron, and Dominic\r\n\0",1,0);
 
     interrupt(33,0,"Enter a string\r\n\0",0,0);
-    readString(cString);
+    interrupt(33, 1, cString, 0, 0);
     interrupt(33,0,cString,0,0);
     while(1);
 }
@@ -122,7 +122,10 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
       case 0:
         printString(bx, cx);
         break;
-/*      case 1: case 2: case 3: case 4: case 5: */
+      case 1:
+        readString(bx);
+        break;
+/*      case 2: case 3: case 4: case 5: */
 /*      case 6: case 7: case 8: case 9: case 10: */
 /*      case 11: case 12: case 13: case 14: case 15: */
       default: printString("General BlackDOS error.\r\n\0");
