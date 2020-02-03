@@ -26,12 +26,18 @@
 
 void handleInterrupt21(int,int,int,int);
 void printLogo();
+void readString(char*);
 
 void main()
 {
+    char cString[80];
    makeInterrupt21();
    printLogo();
    interrupt(33,0,"Hello world from Joseph, Cameron, and Dominic\r\n\0",1,0);
+
+   interrupt(33,0,"Enter a string\n\0",0,0);
+   readString(cString);
+   interrupt(33,0,cString,0,0);
    while(1);
 }
 
@@ -77,7 +83,33 @@ void printLogo()
 
 /* MAKE FUTURE UPDATES HERE */
 /* VVVVVVVVVVVVVVVVVVVVVVVV */
+/*
+*Takes in char string of no more than 80 elements, calling interrupt to print elements
+*to string.
+*/
+void readString(char* cString){
 
+    char input;
+    int index = 0;
+    do{
+        input = interrupt(22,0,0,0,0);
+
+        if(input == 8){
+            if(index > 0){
+                --index;
+            }
+        }
+        else{
+            cString[index] = input;
+            if(input == 13){
+                cString[index + 1] = '\0';
+            }
+        }
+
+        printString(cString, 0);
+        ++index;
+    }while(input != 13);
+}
 
 
 /* ^^^^^^^^^^^^^^^^^^^^^^^^ */
