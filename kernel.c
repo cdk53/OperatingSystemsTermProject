@@ -37,14 +37,16 @@ void main()
     interrupt(33,0,"Hello world from Joseph, Cameron, and Dominic\r\n\0",1,0);
 
     /* Lab 2 get string and output string */
-    /*
+
     interrupt(33,0,"Enter a string\r\n\0",0,0);
     interrupt(33, 1, cString, 0, 0);
     interrupt(33,0,cString,0,0);
-    */
+
+    
+    /* Test readint and writeint
     interrupt(33, 14, &n, 0, 0);
     interrupt(33, 13, n, 0, 0);
-
+    */
     while(1);
 }
 
