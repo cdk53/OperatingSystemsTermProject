@@ -26,19 +26,25 @@
 
 void handleInterrupt21(int,int,int,int);
 void printLogo();
-void readString(char*);
 
 void main()
 {
     char cString[80];
+    int n = 0;
 
     makeInterrupt21();
     printLogo();
     interrupt(33,0,"Hello world from Joseph, Cameron, and Dominic\r\n\0",1,0);
 
+    /* Lab 2 get string and output string */
+    /*
     interrupt(33,0,"Enter a string\r\n\0",0,0);
     interrupt(33, 1, cString, 0, 0);
     interrupt(33,0,cString,0,0);
+    */
+    interrupt(33, 14, &n, 0, 0);
+    interrupt(33, 13, n, 0, 0);
+
     while(1);
 }
 
@@ -81,11 +87,10 @@ void printLogo()
    printString(" BlackDOS2020 v. 1.03, c. 2019. Based on a project by M. Black. \r\n\0",0);
    printString(" Author(s): Joseph Cochran, Cameron Knaus, Dominic Polochak\r\n\r\n\0",0);
 }
-
 /* MAKE FUTURE UPDATES HERE */
 /* VVVVVVVVVVVVVVVVVVVVVVVV */
 /*
-*Takes in char string of no more than 80 elements, calling interrupt to print elements
+*Takes in char string of at least 80 elements, calling interrupt to print elements
 *to string.
 */
 void readString(char* cString){
@@ -95,22 +100,107 @@ void readString(char* cString){
     do{
         input = interrupt(22,0,0,0,0);
 
-        if(input == 8){
-            if(index > 0){
+        /* If Backspace */
+        if(input == 8 && index > 0){
                 --index;
+                interrupt(16,14*256+input, 0,0,0);
+        }
+        else {
+            /* If Enter */
+            if(input == 13){
+                interrupt(16,14*256+10, 0,0,0);
+                cString[index] = '\0';
             }
+            else {
+                cString[index] = input;
+            }
+            interrupt(16,14*256+input, 0,0,0);
+            ++index;
         }
-        cString[index] = input;
-        if(input == 13){
-            interrupt(16,14*256+10, 0,0,0);
-            cString[index + 1] = '\0';
-        }
-
-        interrupt(16,14*256+cString[index], 0,0,0);
-        ++index;
-    }while(input != 13);
+    } while(input != 13);
 }
 
+/* Provide support for modulus */
+int mod(int a, int b) {
+    int x = a;
+    while (x >= b) x = x - b;
+    return x;
+}
+
+/* Provide support for integer division */
+int div(int a, int b) {
+    int q = 0;
+    while (q * b <= a) q++;
+    return (q - 1);
+}
+
+/* Converts n to a string, then outputs to the screen */
+void writeInt(int n, int cx) {
+    int index = 0;
+    int tempIndex = 0;
+    char outputString[80];
+    char tempString[80];
+
+    /* Exception, n already equals 0 */
+    if(n == 0) {
+        outputString[0] = '0';
+        outputString[1] = '\0';
+        interrupt(33,0,outputString,cx,0);
+        return;
+    }
+
+    /* Account for the sign if negative */
+    if(n < 0) {
+        outputString[index] = '-';
+        n = n * -1;
+        ++index;
+    }
+
+    /* Fill tempString */
+    while(n != 0) {
+        tempString[tempIndex] = '0' + mod(n, 10);
+        n = div(n, 10);
+        ++tempIndex;
+    }
+    --tempIndex;
+
+    /* Fill output string with results */
+    while(tempIndex >= 0) {
+        outputString[index] = tempString[tempIndex];
+        ++index;
+        --tempIndex;
+    }
+
+    /* Add null terminator to outputString */
+    outputString[index] = '\0';
+
+    /* Run output to screen or printer */
+    interrupt(33,0,outputString,cx,0);
+}
+
+/* Reads in a char string and converts the input to an integer and stores it in the given n*/
+void readInt(int* n) {
+    char inputString[80];
+    int index = 0;
+    int sign = 1;
+
+    interrupt(33, 1, inputString, 0, 0);
+
+    if(inputString[0] == '-') {
+        sign *= -1;
+        ++index;
+    }
+
+    /* Convert chars to integer digits */
+    *n = 0;
+    while(inputString[index] != '\0') {
+        *n *= 10;
+        *n += (int)(inputString[index] - 48);
+        ++index;
+    }
+
+    *n *= sign;
+}
 
 /* ^^^^^^^^^^^^^^^^^^^^^^^^ */
 /* MAKE FUTURE UPDATES HERE */
@@ -118,16 +208,23 @@ void readString(char* cString){
 void handleInterrupt21(int ax, int bx, int cx, int dx)
 {
 /*   return; */
-   switch(ax) {
-      case 0:
-        printString(bx, cx);
-        break;
-      case 1:
-        readString(bx);
-        break;
+    switch(ax) {
+       case 0:
+            printString(bx, cx);
+            break;
+        case 1:
+            readString(bx);
+            break;
 /*      case 2: case 3: case 4: case 5: */
 /*      case 6: case 7: case 8: case 9: case 10: */
-/*      case 11: case 12: case 13: case 14: case 15: */
+/*      case 11: case 12: */
+        case 13:
+            writeInt(bx, cx);
+            break;
+        case 14:
+            readInt(bx);
+            break;
+/*      case 15: */
       default: printString("General BlackDOS error.\r\n\0");
    }
 }
