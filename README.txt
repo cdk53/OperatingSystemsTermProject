@@ -7,8 +7,11 @@
  Changes to BlackDOS:
  - Created a script to create a blank disk image, add the bootloader to sector zero,
    and put the kernal into sector 259.
--  Added the printString functionality to the interrupt vector table, allowing
+ - Added the printString functionality to the interrupt vector table, allowing
    for printing to the screen or printing to a printer.
+ Changes for Lab 3
+ - Added a new color scheme to BlackDOS (Red foreground, gray background).
+ - Added the ability to read and write from a floppy disk 
 
 
 Running The Lab:

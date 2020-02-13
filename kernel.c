@@ -29,7 +29,9 @@ void printLogo();
 
 void main()
 {
-    char buffer[512]; int i;
+    char buffer[512];
+    int i;
+
     makeInterrupt21();
     for (i = 0; i < 512; i++) buffer[i] = 0;
     buffer[0] = 7;
@@ -39,7 +41,7 @@ void main()
     printLogo();
     interrupt(33,2,buffer,30,1);
     interrupt(33,0,buffer,0,0);
-    while (1) ;
+    while (1);
 }
 
 void printString(char* c, int d)
