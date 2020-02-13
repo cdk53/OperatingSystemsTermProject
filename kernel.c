@@ -19,7 +19,7 @@
 /*                                                                        */
 /*                                                                        */
 /*                                                                        */
-/* Signed: Joseph Cochran, Cameron Knaus, Dominic Polochak Date: 01/28/20 */
+/* Signed: Joseph Cochran, Cameron Knaus, Dominic Polochak Date: 02/03/20 */
 /*                                                                        */
 /*                                                                        */
 /* 3460:4/526 BlackDOS2020 kernel, Version 1.03, Fall 2019.               */
@@ -29,25 +29,17 @@ void printLogo();
 
 void main()
 {
-    char cString[80];
-    int n = 0;
-
+    char buffer[512]; int i;
     makeInterrupt21();
+    for (i = 0; i < 512; i++) buffer[i] = 0;
+    buffer[0] = 7;
+    buffer[1] = 4;
+    interrupt(33,6,buffer,258,1);
+    interrupt(33,12,buffer[0]+1,buffer[1]+1,0);
     printLogo();
-    interrupt(33,0,"Hello world from Joseph, Cameron, and Dominic\r\n\0",1,0);
-
-    /* Lab 2 get string and output string */
-
-    interrupt(33,0,"Enter a string\r\n\0",0,0);
-    interrupt(33, 1, cString, 0, 0);
-    interrupt(33,0,cString,0,0);
-
-    
-    /* Test readint and writeint
-    interrupt(33, 14, &n, 0, 0);
-    interrupt(33, 13, n, 0, 0);
-    */
-    while(1);
+    interrupt(33,2,buffer,30,1);
+    interrupt(33,0,buffer,0,0);
+    while (1) ;
 }
 
 void printString(char* c, int d)
@@ -67,17 +59,6 @@ void printString(char* c, int d)
    return;
 }
 
-void clearScreen()
-{
-  int i = 0;
-  for(i; i < 24; ++i)
-  {
-    interrupt(16, 14*256+'\r', 0,0,0);
-    interrupt(16, 14*256+'\n', 0,0,0);
-  }
-  return;
-}
-
 void printLogo()
 {
    printString("       ___   `._   ____  _            _    _____   ____   _____ \r\n\0",0);
@@ -95,6 +76,21 @@ void printLogo()
 *Takes in char string of at least 80 elements, calling interrupt to print elements
 *to string.
 */
+
+/* Provide support for modulus */
+int mod(int a, int b) {
+    int x = a;
+    while (x >= b) x = x - b;
+    return x;
+}
+
+/* Provide support for integer division */
+int div(int a, int b) {
+    int q = 0;
+    while (q * b <= a) q++;
+    return (q - 1);
+}
+
 void readString(char* cString){
 
     char input;
@@ -120,20 +116,8 @@ void readString(char* cString){
             ++index;
         }
     } while(input != 13);
-}
 
-/* Provide support for modulus */
-int mod(int a, int b) {
-    int x = a;
-    while (x >= b) x = x - b;
-    return x;
-}
-
-/* Provide support for integer division */
-int div(int a, int b) {
-    int q = 0;
-    while (q * b <= a) q++;
-    return (q - 1);
+    return;
 }
 
 /* Converts n to a string, then outputs to the screen */
@@ -178,6 +162,8 @@ void writeInt(int n, int cx) {
 
     /* Run output to screen or printer */
     interrupt(33,0,outputString,cx,0);
+
+    return;
 }
 
 /* Reads in a char string and converts the input to an integer and stores it in the given n*/
@@ -202,6 +188,105 @@ void readInt(int* n) {
     }
 
     *n *= sign;
+
+    return;
+}
+
+/* Reads a specified sector from a floppy disk */
+void readSector(char* buffer, int sector, int sectorCount) {
+    /* Convert to interrupt ax, cx, and dx register values */
+    int ax;
+    int cx;
+    int dx;
+    int relativeSector;
+    int headNumber;
+    int trackNumber;
+
+    /* Convert given absolute sector number to a relative sector number */
+    relativeSector = mod(sector, 18) + 1;
+
+    /* Retrieve head number from the given absolute sector number */
+    headNumber = mod(div(sector, 18), 2);
+
+    /* Retrieve track number from the given absolute sector number */
+    trackNumber = div(sector, 36);
+
+    /* ax's first 512 bits use 2 for read, 768 for write */
+    ax = 512 + sectorCount;
+
+    /* Upper 8 bits of cx are track number of starting point, lower 8 bits are
+    relative sector number of starting point*/
+    cx = (trackNumber * 256) + relativeSector;
+
+    /* Upper 8 bits of dx are the head number starting point and the lower 8 bits
+    are the device number for the floppy disk to use (Defaulting to 0 for this project)*/
+    dx = headNumber * 256;
+
+    interrupt(19, ax, buffer, cx, dx);
+
+    return;
+}
+
+/* Writes to a specified sector from a floppy disk */
+void writeSector(char* buffer, int sector, int sectorCount) {
+    /* Convert to interrupt ax, cx, and dx register values */
+    int ax;
+    int cx;
+    int dx;
+    int relativeSector;
+    int headNumber;
+    int trackNumber;
+
+    /* Convert given absolute sector number to a relative sector number */
+    relativeSector = mod(sector, 18) + 1;
+
+    /* Retrieve head number from the given absolute sector number */
+    headNumber = mod(div(sector, 18), 2);
+
+    /* Retrieve track number from the given absolute sector number */
+    trackNumber = div(sector, 36);
+
+    /* ax's first 512 bits use 2 for read, 768 for write */
+    ax = 768 + sectorCount;
+
+    /* Upper 8 bits of cx are track number of starting point, lower 8 bits are
+    relative sector number of starting point*/
+    cx = (trackNumber * 256) + relativeSector;
+
+    /* Upper 8 bits of dx are the head number starting point and the lower 8 bits
+    are the device number for the floppy disk to use (Defaulting to 0 for this project)*/
+    dx = headNumber * 256;
+
+    interrupt(19, ax, buffer, cx, dx);
+
+    return;
+}
+
+
+/* Clears the screen with the given background and foreground colors */
+void clearScreen(int background, int foreground)
+{
+  int i = 0;
+
+  /* Clear away the screen with 24 new lines and returns */
+  for(i; i < 24; ++i)
+  {
+    interrupt(16, 14*256+'\r', 0,0,0);
+    interrupt(16, 14*256+'\n', 0,0,0);
+  }
+
+  /* reposition the cursor in the upper left-hand corner */
+  interrupt(16, 512, 0,0,0);
+
+  /* Change the colors if the given parameters are valid */
+  if((background - 1) <= 8 || (foreground - 1) <= 16) {
+      /* If the parameters are not the standard */
+      if(background > 0 && foreground > 0) {
+          interrupt(16, 1536, 4096 * (background - 1) + 256 * (foreground - 1), 0, 6223);
+      }
+  }
+
+  return;
 }
 
 /* ^^^^^^^^^^^^^^^^^^^^^^^^ */
@@ -217,9 +302,18 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         case 1:
             readString(bx);
             break;
-/*      case 2: case 3: case 4: case 5: */
-/*      case 6: case 7: case 8: case 9: case 10: */
-/*      case 11: case 12: */
+        case 2:
+            readSector(bx, cx, dx);
+            break;
+        /*case 3: case 4: case 5: */
+        case 6:
+            writeSector(bx, cx, dx);
+            break;
+        /* case 7: case 8: case 9: case 10: */
+        /*      case 11: */
+        case 12:
+            clearScreen(bx, cx);
+            break;
         case 13:
             writeInt(bx, cx);
             break;
