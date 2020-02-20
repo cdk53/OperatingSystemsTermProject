@@ -26,21 +26,17 @@
 
 void handleInterrupt21(int,int,int,int);
 void printLogo();
+void runProgram(int,int,int);
 
 void main()
 {
     char buffer[512];
-    int i;
-
     makeInterrupt21();
-    for (i = 0; i < 512; i++) buffer[i] = 0;
-    buffer[0] = 7;
-    buffer[1] = 4;
-    interrupt(33,6,buffer,258,1);
+    interrupt(33,2,buffer,258,1);
     interrupt(33,12,buffer[0]+1,buffer[1]+1,0);
     printLogo();
-    interrupt(33,2,buffer,30,1);
-    interrupt(33,0,buffer,0,0);
+    runProgram(30, 1, 2);
+    interrupt(33,0,"Error if this executes.\r\n\0",0,0);
     while (1);
 }
 
@@ -291,6 +287,38 @@ void clearScreen(int background, int foreground)
   return;
 }
 
+/*
+takes as parameters the starting sector of the program you want to run from the
+disk, the number of sectors to read and the segment where you want it to run.
+Loads and runs the program.
+*/
+void runProgram(int start, int size, int segment){
+
+    char localBuffer[13312];
+    int baseLocation = 0;
+    int maxProgramSize = 13312;
+    int i;
+
+    /* Read Sectors */
+    interrupt(33, 2, localBuffer, start, size);
+
+    /* Multiply Segment */
+    baseLocation = segment * 4096;
+
+    /* Transfer loaded file from the local buffer into the segment location */
+    for(i = 0; i < maxProgramSize; ++i) {
+        putInMemory(baseLocation, i, localBuffer[i]);
+    }
+
+    /* Call launchProgram */
+    launchProgram(baseLocation);
+}
+
+/* Terminate Program System Call */
+void stop() {
+    while(1);
+}
+
 /* ^^^^^^^^^^^^^^^^^^^^^^^^ */
 /* MAKE FUTURE UPDATES HERE */
 
@@ -307,7 +335,10 @@ void handleInterrupt21(int ax, int bx, int cx, int dx)
         case 2:
             readSector(bx, cx, dx);
             break;
-        /*case 3: case 4: case 5: */
+        /*case 3: case 4: */
+        case 5:
+            stop();
+            break;
         case 6:
             writeSector(bx, cx, dx);
             break;
