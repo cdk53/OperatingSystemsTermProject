@@ -1,4 +1,4 @@
- LAB 01
+ LAB 04
  Authors:
  Joseph Cochran - jmc361
  Cameron Knaus  - cdk53
@@ -11,7 +11,10 @@
    for printing to the screen or printing to a printer.
  Changes for Lab 3
  - Added a new color scheme to BlackDOS (Red foreground, gray background).
- - Added the ability to read and write from a floppy disk 
+ - Added the ability to read and write from a floppy disk
+ Changes for Lab 4
+ - Added ability to load and run programs
+ - For Lab 4, currently runs the fib program
 
 
 Running The Lab:
