@@ -28,20 +28,18 @@ void handleInterrupt21(int,int,int,int);
 void printLogo();
 void runProgram(int,int,int);
 
-void main()
-{
+void main() {
     char buffer[512];
     makeInterrupt21();
     interrupt(33,2,buffer,258,1);
     interrupt(33,12,buffer[0]+1,buffer[1]+1,0);
     printLogo();
-    runProgram(30, 1, 2);
-    interrupt(33,0,"Error if this executes.\r\n\0",0,0);
+    runProgram(30, 10, 2);
+    interrupt(33,0,"Bad or missing comand interpreter.\r\n\0",0,0);
     while (1);
 }
 
-void printString(char* c, int d)
-{
+void printString(char* c, int d) {
    /* fill this in */
    int index = 0;
    while(c[index] != '\0')
@@ -57,8 +55,7 @@ void printString(char* c, int d)
    return;
 }
 
-void printLogo()
-{
+void printLogo() {
    printString("       ___   `._   ____  _            _    _____   ____   _____ \r\n\0",0);
    printString("      /   \\__/__> |  _ \\| |          | |  |  __ \\ / __ \\ / ____|\r\n\0",0);
    printString("     /_  \\  _/    | |_) | | __ _  ___| | _| |  | | |  | | (___ \r\n\0",0);
@@ -89,7 +86,7 @@ int div(int a, int b) {
     return (q - 1);
 }
 
-void readString(char* cString){
+void readString(char* cString) {
 
     char input;
     int index = 0;
@@ -262,13 +259,11 @@ void writeSector(char* buffer, int sector, int sectorCount) {
 
 
 /* Clears the screen with the given background and foreground colors */
-void clearScreen(int background, int foreground)
-{
+void clearScreen(int background, int foreground) {
   int i = 0;
 
   /* Clear away the screen with 24 new lines and returns */
-  for(i; i < 24; ++i)
-  {
+  for(i; i < 24; ++i) {
     interrupt(16, 14*256+'\r', 0,0,0);
     interrupt(16, 14*256+'\n', 0,0,0);
   }
@@ -292,7 +287,7 @@ takes as parameters the starting sector of the program you want to run from the
 disk, the number of sectors to read and the segment where you want it to run.
 Loads and runs the program.
 */
-void runProgram(int start, int size, int segment){
+void runProgram(int start, int size, int segment) {
 
     char localBuffer[13312];
     int baseLocation = 0;
@@ -322,8 +317,7 @@ void stop() {
 /* ^^^^^^^^^^^^^^^^^^^^^^^^ */
 /* MAKE FUTURE UPDATES HERE */
 
-void handleInterrupt21(int ax, int bx, int cx, int dx)
-{
+void handleInterrupt21(int ax, int bx, int cx, int dx) {
 /*   return; */
     switch(ax) {
        case 0:
