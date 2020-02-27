@@ -90,7 +90,7 @@ void readString(char* cString) {
 
     char input;
     int index = 0;
-    do{
+    do {
         input = interrupt(22,0,0,0,0);
 
         /* If Backspace */

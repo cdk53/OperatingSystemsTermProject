@@ -3,12 +3,11 @@
 int compareStrings(char*, char*);
 
 void main() {
-    char* input;
+    char input[100];
 
     while(1) {
         interrupt(33,0,"~(__^> \0",0 ,0);
         interrupt(33, 1, input, 0, 0);
-        interrupt(33,0,input,0,0);
     }
 }
 
