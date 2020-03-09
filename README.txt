@@ -16,7 +16,7 @@
  - Added ability to load and run programs
  - For Lab 4, currently runs the fib program
  Changes for Lab 5
- - In the main of shell, wthin an infinite loop, a mouse is printed
+ - In the main of shell, within an infinite loop, a mouse is printed
    to the screen using interrupt 33 and the shell prompts for input.
  - The input redirects to a handleCommand function to parse the input,
    searching for commands and their following characters.
@@ -26,6 +26,8 @@
  - If echo was called, the shell would print the text after the echo using interrupt 33.
  - Three functions, handleEcho, handleSpaces, and clearBuffer were created because if
    there was more than one space/tab, we were to shrink it to one space.
+ - As of now, the the remaining commands are stub functions that only print their
+   arguments and a standard message
 
 
 
